@@ -39,6 +39,9 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
   Future<void> initialize() async{
     store = await openStore();
     LifeEventBox = store?.box<LifeEvent>();
+    fetchLifeEvents ();
+  }
+  void fetchLifeEvents (){
     // lifeEventsがnullだった場合はlifeEvents変数にからのListを代入する。nullじゃない場合はgetAllが実行されlifeEventの一覧が代入される
     LifeEvents = LifeEventBox?.getAll() ?? [];
     setState(() {});
@@ -60,7 +63,41 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
         itemCount: LifeEvents.length,
         itemBuilder: (context, index){
           final LifeEvent = LifeEvents[index];
-          return Text(LifeEvent.title);
+          return Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    LifeEvent.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                    ),
+                  )),
+                  Text(
+                    '${LifeEvent.count}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: (){
+                      LifeEvent.count++;
+                      LifeEventBox?.put(LifeEvent);
+                      fetchLifeEvents();
+                    },
+                    icon: const Icon(Icons.plus_one)
+                  ),
+                  IconButton(
+                    onPressed: (){
+                      LifeEventBox?.remove(LifeEvent.id);
+                      fetchLifeEvents();
+                    },
+                     icon: const Icon(Icons.delete),
+                  )
+              ],
+            ),
+            );
         }
         ),
         floatingActionButton: FloatingActionButton(
@@ -77,8 +114,7 @@ class _LifeCounterPageState extends State<LifeCounterPage> {
             );
             if (newLifeEvent != null ){
               LifeEventBox?.put(newLifeEvent);
-              LifeEvents = LifeEventBox?.getAll() ?? [];
-              setState(() {});
+              fetchLifeEvents ();
             }
           },
         ),
